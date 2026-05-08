@@ -333,6 +333,37 @@
   <button class="lang-btn" onclick="setLang('ar', this)">عربي</button>
   <button class="lang-btn" onclick="setLang('it', this)">IT</button>
   <button class="lang-btn" onclick="setLang('de', this)">DE</button>
+  <button class="lang-btn" onclick="goTo('page-settings')" style="margin-left:auto;" title="API Key Settings">⚙</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="app-header" style="padding-bottom:8px;">
+    <button class="back-btn" onclick="goTo('page-home')">← <span>Back</span></button>
+  </div>
+  <div class="section-header">
+    <div class="section-label">Configuration</div>
+    <div class="section-title">Gemini API Key</div>
+    <div class="section-hint">Get your free key at <strong>aistudio.google.com</strong> → Get API Key. It stays on your device only — never sent anywhere except Google.</div>
+  </div>
+  <div style="background:white;border:1px solid var(--parchment-dark);border-top:3px solid var(--gold);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:16px;">
+    <label style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);display:block;margin-bottom:10px;">Your API Key</label>
+    <input type="password" id="api-key-input" placeholder="AIza..." style="width:100%;padding:12px 14px;border:1px solid var(--parchment-dark);border-radius:var(--radius);font-family:monospace;font-size:13px;color:var(--ink);background:var(--parchment);outline:none;margin-bottom:8px;" />
+    <div style="font-size:11px;color:var(--ink-muted);">Stored locally in your browser. Never leaves your device.</div>
+  </div>
+  <div id="key-status" style="font-size:13px;color:var(--emerald);margin-bottom:16px;display:none;padding:10px 14px;background:var(--emerald-light);border-radius:var(--radius);">✓ API key saved</div>
+  <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+  <button class="btn-secondary" onclick="goTo('page-home')">Cancel</button>
+  <div style="margin-top:24px;padding:16px;background:var(--gold-pale);border:1px solid var(--gold-light);border-radius:var(--radius-lg);">
+    <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">How to get your free key</div>
+    <div style="font-size:13px;color:var(--ink-soft);line-height:1.8;">
+      1. Go to <strong>aistudio.google.com</strong><br>
+      2. Sign in with Google<br>
+      3. Click <strong>"Get API Key"</strong><br>
+      4. Click <strong>"Create API key"</strong><br>
+      5. Copy &amp; paste it above
+    </div>
+  </div>
 </div>
 
 <!-- HOME -->
@@ -744,9 +775,20 @@ async function fetchVerifiedAyah(surah, ayah, lang) {
 }
 
 
+function getApiKey() {
+  return localStorage.getItem('mirayah_gemini_key') || '';
+}
+
 async function submitReflection() {
   const reflection = document.getElementById('reflection-input').value.trim();
   if (!reflection || reflection.split(/\s+/).length < 5) return;
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    document.getElementById('error-block').textContent = 'Please enter your Gemini API key in Settings first.';
+    document.getElementById('error-block').style.display = 'block';
+    return;
+  }
 
   const t = T[currentLang];
   document.getElementById('error-block').style.display = 'none';
@@ -760,21 +802,25 @@ async function submitReflection() {
   }, 2500);
 
   try {
-    // Call our Vercel backend — Gemini key is hidden server-side
-    const res = await fetch('/api/reflect', {
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: t.buildPrompt(reflection) })
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: t.buildPrompt(reflection) }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 900 }
+      })
     });
 
     if (!res.ok) {
       const errText = await res.text().catch(() => String(res.status));
-      throw new Error('API error ' + res.status + ': ' + errText.slice(0, 300));
+      throw new Error('Gemini API ' + res.status + ': ' + errText.slice(0, 300));
     }
 
     const data = await res.json();
-    const raw = data.text || '';
-    if (!raw) throw new Error('Empty response from server');
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!raw) throw new Error('Empty response from Gemini');
 
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response: ' + raw.slice(0, 200));
@@ -906,12 +952,17 @@ function initVoice() {
   recognition.onresult = (e) => {
     let interim = '';
     finalTranscript = '';
+    // Only iterate from resultIndex to avoid reprocessing old results
     for (let i = 0; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
-      else interim += e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        finalTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim = e.results[i][0].transcript; // only latest interim chunk
+      }
     }
-    const combined = (existingText ? existingText.trim() + ' ' : '') + finalTranscript + interim;
-    document.getElementById('reflection-input').value = combined;
+    // Show final + current interim only — no duplication
+    const base = existingText ? existingText.trim() + ' ' : '';
+    document.getElementById('reflection-input').value = (base + finalTranscript + interim).trim();
     updateCount();
   };
 
@@ -958,8 +1009,23 @@ function updateVoiceHint() {
   document.getElementById('voice-hint').textContent = isRecording ? hints.recording : hints.idle;
 }
 
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  localStorage.setItem('mirayah_gemini_key', key);
+  const status = document.getElementById('key-status');
+  status.style.display = 'block';
+  setTimeout(() => { status.style.display = 'none'; goTo('page-home'); }, 1500);
+}
+
+function loadSavedKey() {
+  const key = localStorage.getItem('mirayah_gemini_key') || '';
+  if (key) document.getElementById('api-key-input').value = key;
+}
+
 // Init
 applyGreeting();
+loadSavedKey();
 renderStreakDays();
 </script>
 <div class="dev-footer">
