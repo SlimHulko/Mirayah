@@ -904,21 +904,22 @@ function initVoice() {
   };
 
   recognition.onresult = (e) => {
-    // Non-continuous mode: always one clean final result
+    // Non-continuous mode: one clean final result per chunk
     const transcript = e.results[0][0].transcript.trim();
     const base = existingText ? existingText + ' ' : '';
     document.getElementById('reflection-input').value = (base + transcript).trim();
     existingText = document.getElementById('reflection-input').value.trim();
     updateCount();
-    // Auto-restart to keep listening
-    if (isRecording) {
-      try { recognition.start(); } catch(_) {}
-    }
   };
 
   recognition.onend = () => {
-    if (!isRecording) {
-      // User stopped — clean up UI
+    if (isRecording) {
+      // Still recording — restart after brief delay to let browser reset
+      setTimeout(() => {
+        try { recognition.start(); } catch(_) {}
+      }, 150);
+    } else {
+      // User tapped stop — clean up UI
       document.getElementById('mic-btn').classList.remove('recording');
       document.getElementById('waveform').style.display = 'none';
       document.getElementById('voice-hint').style.display = 'inline';
