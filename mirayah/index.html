@@ -945,7 +945,8 @@ function toggleVoice() {
     if (!initVoice()) return;
   }
   if (isRecording) {
-    recognition.stop();
+    isRecording = false; // set FIRST so onend knows to stop, not restart
+    try { recognition.abort(); } catch(_) {}
   } else {
     recognition.lang = VOICE_LANGS[currentLang] || 'en-US';
     recognition.start();
