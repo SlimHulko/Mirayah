@@ -26,7 +26,7 @@ const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
       })
     });
 
