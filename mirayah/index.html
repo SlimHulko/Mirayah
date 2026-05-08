@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirayah — Your Spiritual Mirror</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1008;
+    --ink-soft: #3d2e1e;
+    --ink-muted: #7a6a58;
+    --parchment: #faf6ef;
+    --parchment-dark: #ede3d4;
+    --gold: #c8922a;
+    --gold-light: #e0b96a;
+    --gold-pale: #f5e9cc;
+    --emerald: #1a5c45;
+    --emerald-light: #e3f2ec;
+    --emerald-mid: #2e8b68;
+    --maroon: #6b1a2a;
+    --navy: #0f2744;
+    --radius: 4px;
+    --radius-lg: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(200,146,42,0.06) 39px, rgba(200,146,42,0.06) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(200,146,42,0.06) 39px, rgba(200,146,42,0.06) 40px);
+  }
+
+  /* RTL overrides */
+  [dir="rtl"] body { font-family: 'Amiri', serif; }
+  [dir="rtl"] .app-title { font-family: 'Amiri', serif; font-size: 34px; }
+  [dir="rtl"] .section-title { font-family: 'Amiri', serif; }
+  [dir="rtl"] .greeting-text { font-family: 'Amiri', serif; }
+  [dir="rtl"] .reflection-area { font-family: 'Amiri', serif; font-size: 17px; text-align: right; direction: rtl; }
+  [dir="rtl"] .char-count { text-align: left; }
+  [dir="rtl"] .back-btn { flex-direction: row-reverse; }
+  [dir="rtl"] .greeting-time, [dir="rtl"] .section-label, [dir="rtl"] .themes-label, [dir="rtl"] .response-label { letter-spacing: 0; }
+  [dir="rtl"] .reflection-echo { border-left: none; border-right: 3px solid var(--gold-light); border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+  [dir="rtl"] .ayah-translation { border-left: none; border-right: 2px solid var(--emerald-mid); padding-left: 0; padding-right: 14px; }
+  [dir="rtl"] .intention-item { flex-direction: row-reverse; }
+  [dir="rtl"] .loading-text { font-family: 'Amiri', serif; font-size: 20px; }
+  [dir="rtl"] .btn-primary { font-family: 'Amiri', serif; font-size: 17px; }
+  [dir="rtl"] .btn-secondary { font-family: 'Amiri', serif; font-size: 16px; }
+  [dir="rtl"] .lang-bar { justify-content: flex-start; }
+  [dir="rtl"] .ayah-source { text-align: right; }
+
+  /* ── GEOMETRIC BORDER TOP ── */
+  body::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 6px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0px, var(--gold) 10px, var(--maroon) 10px, var(--maroon) 20px, var(--emerald) 20px, var(--emerald) 30px, var(--navy) 30px, var(--navy) 40px);
+    position: fixed; top: 0; left: 0; z-index: 100;
+  }
+
+  .lang-bar {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 520px;
+    display: flex; justify-content: flex-end;
+    padding: 20px 20px 0;
+    gap: 6px;
+  }
+  .lang-btn {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 5px 12px; border-radius: 2px;
+    border: 1px solid var(--parchment-dark);
+    background: transparent; color: var(--ink-muted);
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .lang-btn:hover { background: var(--gold-pale); color: var(--gold); border-color: var(--gold-light); }
+  .lang-btn.active { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+
+  .page { display: none; width: 100%; max-width: 520px; padding: 0 20px 80px; animation: fadeUp 0.5s ease both; position: relative; z-index: 1; }
+  .page.active { display: flex; flex-direction: column; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── HEADER ── */
+  .app-header { text-align: center; padding: 28px 0 24px; }
+
+  .logo-mark {
+    width: 72px; height: 72px;
+    margin: 0 auto 16px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg.geo { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .logo-mark svg.inner { position: relative; z-index: 1; width: 28px; height: 28px; }
+
+  .app-title {
+    font-family: 'Lora', serif; font-size: 28px; font-weight: 400;
+    letter-spacing: 0.04em; color: var(--ink);
+    text-transform: uppercase;
+  }
+  .title-ar {
+    font-family: 'Amiri', serif; font-size: 18px;
+    color: var(--gold); display: block; margin-top: 2px;
+    letter-spacing: 0.02em; direction: rtl;
+  }
+  .app-subtitle { font-size: 12px; color: var(--ink-muted); margin-top: 6px; font-weight: 300; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── ORNAMENTAL DIVIDER ── */
+  .ornament {
+    text-align: center; font-family: 'Amiri', serif;
+    font-size: 20px; color: var(--gold); opacity: 0.6;
+    margin: 4px 0 16px; letter-spacing: 0.1em;
+  }
+
+  /* ── CARDS ── */
+  .greeting-block {
+    background: var(--navy);
+    border-radius: var(--radius-lg);
+    padding: 24px 26px; margin-bottom: 14px;
+    position: relative; overflow: hidden;
+    border: 1px solid rgba(200,146,42,0.3);
+  }
+  .greeting-block::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 61,35 97,35 68,57 79,91 50,70 21,91 32,57 3,35 39,35' fill='none' stroke='rgba(200,146,42,0.2)' stroke-width='1'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .greeting-time { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 8px; }
+  .greeting-text { font-family: 'Lora', serif; font-size: 22px; font-weight: 400; line-height: 1.3; color: #fff; margin-bottom: 6px; }
+  .greeting-sub { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+
+  .streak-card {
+    background: var(--emerald); border-radius: var(--radius-lg);
+    padding: 18px 22px; display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px; color: white;
+    border: 1px solid rgba(200,146,42,0.25);
+    position: relative; overflow: hidden;
+  }
+  .streak-card::after {
+    content: '☽';
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    font-size: 60px; opacity: 0.06; color: #fff;
+  }
+  .streak-num { font-family: 'Lora', serif; font-size: 40px; font-weight: 400; line-height: 1; }
+  .streak-label { font-size: 11px; opacity: 0.7; margin-top: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .streak-days { display: flex; gap: 5px; position: relative; z-index: 1; }
+  .day-dot { width: 30px; height: 30px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; letter-spacing: 0.02em; }
+  .day-dot.done { background: rgba(255,255,255,0.2); color: white; }
+  .day-dot.empty { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.35); }
+  .day-dot.today { background: var(--gold); color: white; }
+
+  .themes-card {
+    background: white; border-radius: var(--radius-lg);
+    border: 1px solid var(--parchment-dark);
+    border-top: 3px solid var(--gold);
+    padding: 18px 22px; margin-bottom: 20px;
+  }
+  .themes-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px; }
+  .theme-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 12px; padding: 5px 13px; border-radius: 2px; border: 1px solid; }
+  .tag-purple { background: #f3f0ff; color: #4a3a9a; border-color: #c4b8f0; }
+  .tag-teal   { background: var(--emerald-light); color: var(--emerald); border-color: #9acfbe; }
+  .tag-amber  { background: var(--gold-pale); color: #7a5010; border-color: var(--gold-light); }
+
+  /* ── SECTION HEADERS ── */
+  .section-header { margin-bottom: 20px; }
+  .section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .section-title { font-family: 'Lora', serif; font-size: 24px; font-weight: 400; color: var(--ink); }
+  .section-hint { font-size: 13px; color: var(--ink-muted); margin-top: 6px; line-height: 1.7; }
+
+  /* ── REFLECTION ── */
+  .reflection-area {
+    width: 100%; min-height: 180px;
+    background: white; border: 1px solid var(--parchment-dark);
+    border-bottom: 2px solid var(--gold-light);
+    border-radius: var(--radius); padding: 18px 20px;
+    font-family: 'Lora', serif; font-size: 15px;
+    color: var(--ink); line-height: 1.9; resize: none; outline: none;
+    transition: border-color 0.2s; margin-bottom: 16px;
+  }
+  .reflection-area:focus { border-color: var(--gold); border-bottom-color: var(--gold); }
+  .reflection-area::placeholder { color: var(--ink-muted); font-style: italic; }
+  .char-count { font-size: 12px; color: var(--ink-muted); text-align: right; margin-bottom: 20px; margin-top: -10px; }
+
+  /* ── WISDOM ── */
+  .ayah-card {
+    background: var(--navy);
+    border-radius: var(--radius-lg);
+    padding: 26px 26px; margin-bottom: 14px;
+    border: 1px solid rgba(200,146,42,0.3);
+    position: relative; overflow: hidden;
+  }
+  .ayah-card::before {
+    content: '';
+    position: absolute; bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='rgba(200,146,42,0.15)' stroke-width='1'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='rgba(200,146,42,0.1)' stroke-width='1'/%3E%3Cpolygon points='50,8 61,38 93,38 68,58 78,88 50,70 22,88 32,58 7,38 39,38' fill='none' stroke='rgba(200,146,42,0.12)' stroke-width='0.8'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .ayah-arabic { font-family: 'Amiri', serif; font-size: 26px; color: var(--gold-light); text-align: right; line-height: 2.1; margin-bottom: 16px; direction: rtl; position: relative; z-index: 1; }
+  .ayah-translation { font-family: 'Lora', serif; font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.8; font-style: italic; margin-bottom: 12px; border-left: 2px solid var(--gold); padding-left: 14px; position: relative; z-index: 1; }
+  .ayah-source { font-size: 11px; color: var(--gold-light); font-weight: 500; letter-spacing: 0.05em; position: relative; z-index: 1; }
+
+  .reflection-echo {
+    background: var(--gold-pale);
+    border: 1px solid var(--parchment-dark);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    padding: 14px 18px; font-size: 13px; color: var(--ink-soft);
+    line-height: 1.7; margin-bottom: 14px;
+    font-family: 'Lora', serif; font-style: italic;
+  }
+
+  .ai-response-block {
+    background: white;
+    border: 1px solid var(--parchment-dark);
+    border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 14px;
+    border-top: 2px solid var(--emerald);
+  }
+  .response-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 10px; }
+  .response-text { font-size: 14px; color: var(--ink-soft); line-height: 1.9; font-family: 'Lora', serif; }
+
+  .question-block {
+    background: var(--gold-pale);
+    border: 1px solid var(--gold-light);
+    border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 14px;
+    position: relative;
+  }
+  .question-block::before { content: '؟'; position: absolute; top: 10px; right: 18px; font-size: 48px; font-family: 'Amiri', serif; color: var(--gold); opacity: 0.12; line-height: 1; }
+  .question-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .question-text { font-family: 'Amiri', serif; font-size: 17px; color: var(--ink); line-height: 1.7; }
+
+  .intentions-block {
+    background: white; border: 1px solid var(--parchment-dark);
+    border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 20px;
+    border-top: 2px solid var(--maroon);
+  }
+  .intention-item { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--parchment-dark); font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+  .intention-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .intention-dot { width: 8px; height: 8px; border-radius: 0; background: var(--gold); transform: rotate(45deg); margin-top: 6px; flex-shrink: 0; }
+
+  /* ── LOADING ── */
+  .loading-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; gap: 24px; }
+  .spinner {
+    width: 52px; height: 52px;
+    border: 1.5px solid var(--parchment-dark);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1.4s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'Amiri', serif; font-size: 18px; color: var(--ink-muted); text-align: center; line-height: 1.8; direction: inherit; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width: 100%; padding: 15px;
+    background: var(--emerald); color: #fff;
+    border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border-bottom: 3px solid rgba(0,0,0,0.2);
+  }
+  .btn-primary:hover { background: #1d6e52; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-secondary {
+    width: 100%; padding: 13px;
+    background: transparent; color: var(--ink-muted);
+    border: 1px solid var(--parchment-dark);
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; cursor: pointer; transition: all 0.2s; margin-top: 10px;
+  }
+  .btn-secondary:hover { background: var(--gold-pale); border-color: var(--gold-light); color: var(--ink); }
+
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-muted); background: none; border: none; cursor: pointer; padding: 0; margin-bottom: 24px; transition: color 0.2s; letter-spacing: 0.04em; }
+  .back-btn:hover { color: var(--gold); }
+
+  .error-block { background: #fff5f5; border: 1px solid #f5c6c6; border-radius: var(--radius); padding: 16px 20px; font-size: 13px; color: #8a2020; margin-bottom: 16px; line-height: 1.6; display: none; }
+  .bismillah { text-align: center; font-family: 'Amiri', serif; font-size: 26px; color: var(--gold); padding: 4px 0 22px; direction: rtl; letter-spacing: 0.05em; }
+
+  /* ── VOICE ── */
+  .voice-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0; }
+  .mic-btn { flex-shrink:0; width:48px; height:48px; border-radius:50%; border:1.5px solid var(--parchment-dark); background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; color:var(--ink-muted); }
+  .mic-btn:hover { border-color:var(--gold); color:var(--gold); }
+  .mic-btn.recording { background:#fff0f0; border-color:#e05050; color:#e05050; animation:mic-pulse 1.4s ease-in-out infinite; }
+  @keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(224,80,80,0.15)} 50%{box-shadow:0 0 0 8px rgba(224,80,80,0)} }
+  .voice-status { flex:1; font-size:12px; color:var(--ink-muted); line-height:1.5; }
+  .voice-status.recording { color:#c04040; }
+  .waveform { display:flex; align-items:center; gap:2px; height:20px; }
+  .waveform-bar { width:3px; border-radius:2px; background:#e05050; animation:wave 0.8s ease-in-out infinite; }
+  .waveform-bar:nth-child(1){animation-delay:0s;height:6px} .waveform-bar:nth-child(2){animation-delay:.1s;height:12px} .waveform-bar:nth-child(3){animation-delay:.2s;height:18px} .waveform-bar:nth-child(4){animation-delay:.3s;height:14px} .waveform-bar:nth-child(5){animation-delay:.15s;height:8px}
+  @keyframes wave { 0%,100%{transform:scaleY(0.5);opacity:0.5} 50%{transform:scaleY(1);opacity:1} }
+
+  /* ── DEV FOOTER ── */
+  .dev-footer {
+    width: 100%; max-width: 520px;
+    padding: 0 20px 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: relative; z-index: 1;
+  }
+  .dev-footer-line { width: 40px; height: 1px; background: var(--parchment-dark); margin-bottom: 4px; }
+  .dev-footer-text {
+    font-family: 'DM Sans', monospace; font-size: 11px;
+    color: var(--ink-muted); letter-spacing: 0.06em;
+    text-align: center; line-height: 1.8;
+  }
+  .dev-footer-text span { color: var(--gold); }
+  .dev-footer-badge {
+    font-size: 10px; font-weight: 500;
+    padding: 3px 10px; border-radius: 2px;
+    background: var(--gold-pale); color: var(--gold);
+    border: 1px solid var(--gold-light);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+
+<div class="lang-bar" id="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en', this)">EN</button>
+  <button class="lang-btn" onclick="setLang('ar', this)">عربي</button>
+  <button class="lang-btn" onclick="setLang('it', this)">IT</button>
+  <button class="lang-btn" onclick="setLang('de', this)">DE</button>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="app-header">
+    <div class="logo-mark">
+      <svg class="geo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,5 61,36 95,36 68,56 79,89 50,70 21,89 32,56 5,36 39,36" fill="none" stroke="#c8922a" stroke-width="1.2" opacity="0.5"/>
+        <polygon points="50,15 59,40 85,40 64,56 72,82 50,67 28,82 36,56 15,40 41,40" fill="none" stroke="#c8922a" stroke-width="0.8" opacity="0.3"/>
+        <circle cx="50" cy="50" r="20" fill="none" stroke="#c8922a" stroke-width="0.8" opacity="0.4"/>
+      </svg>
+      <svg class="inner" viewBox="0 0 28 28" fill="none" stroke="#c8922a" stroke-width="1.3">
+        <path d="M14 2 L17 11 L26 11 L19 17 L22 26 L14 21 L6 26 L9 17 L2 11 L11 11 Z" fill="rgba(200,146,42,0.1)"/>
+      </svg>
+    </div>
+    <div class="app-title">Mirayah</div>
+    <span class="title-ar">مِرَايَة</span>
+    <div class="app-subtitle" id="home-subtitle">Your spiritual mirror</div>
+  </div>
+
+  <div class="greeting-block">
+    <div class="greeting-time" id="greeting-time">Evening reflection</div>
+    <div class="greeting-text" id="greeting-text">Assalamu alaykum</div>
+    <div class="greeting-sub" id="greeting-sub">Take a moment tonight to sit with yourself.</div>
+  </div>
+
+  <div class="streak-card">
+    <div>
+      <div class="streak-num">7</div>
+      <div class="streak-label" id="streak-label">day streak</div>
+    </div>
+    <div class="streak-days" id="streak-days"></div>
+  </div>
+
+  <div class="themes-card">
+    <div class="themes-label" id="themes-label">Recurring themes this week</div>
+    <div class="theme-tags">
+      <span class="tag tag-purple" id="tag1">Patience with others</span>
+      <span class="tag tag-teal" id="tag2">Gratitude</span>
+      <span class="tag tag-amber" id="tag3">Managing anger</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="begin-btn" onclick="goTo('page-reflect')">Begin tonight's reflection</button>
+</div>
+
+<!-- REFLECT -->
+<div class="page" id="page-reflect">
+  <div class="app-header" style="padding-bottom: 8px;">
+    <button class="back-btn" onclick="goTo('page-home')">← <span id="back-label-reflect">Back</span></button>
+    <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    <div class="ornament">❧ ✦ ❧</div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-label" id="reflect-label">Tonight's reflection</div>
+    <div class="section-title" id="reflect-title">How was your day?</div>
+    <div class="section-hint" id="reflect-hint">Write freely — your thoughts, struggles, moments of gratitude, or anything that stayed with you. This is private and only for you.</div>
+  </div>
+
+  <textarea class="reflection-area" id="reflection-input" oninput="updateCount()" rows="8"
+    placeholder="Today I felt... I struggled with... I'm grateful for... I regret..."></textarea>
+  <div class="char-count"><span id="char-count">0</span> <span id="word-label">words</span></div>
+  <div class="voice-row" style="margin-top:4px; margin-bottom:16px;">
+    <button class="mic-btn" id="mic-btn" onclick="toggleVoice()" aria-label="Toggle voice recording">
+      <svg id="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="12" rx="3"/>
+        <path d="M5 10a7 7 0 0014 0M12 19v3M8 22h8"/>
+      </svg>
+    </button>
+    <div class="voice-status" id="voice-status">
+      <span id="voice-hint">Tap to speak your reflection</span>
+      <div class="waveform" id="waveform" style="display:none;">
+        <div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div><div class="waveform-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-block" id="error-block">Something went wrong. Please check your connection and try again.</div>
+
+  <button class="btn-primary" id="reflect-btn" onclick="submitReflection()" disabled>Reflect with me</button>
+  <button class="btn-secondary" id="later-btn" onclick="goTo('page-home')">Maybe later</button>
+</div>
+
+<!-- LOADING -->
+<div class="page" id="page-loading">
+  <div class="app-header"></div>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Reading your reflection<br>with care and attention…</div>
+  </div>
+</div>
+
+<!-- WISDOM -->
+<div class="page" id="page-wisdom">
+  <div class="app-header" style="padding-bottom: 8px;">
+    <button class="back-btn" onclick="goTo('page-home')">← <span id="back-label-wisdom">Home</span></button>
+  </div>
+
+  <div class="section-header">
+    <div class="section-label" id="wisdom-label">Your reflection, illuminated</div>
+    <div class="section-title" id="wisdom-title">What the tradition offers you</div>
+  </div>
+
+  <div id="wisdom-content"></div>
+
+  <button class="btn-primary" id="save-btn" onclick="goTo('page-home')">Save to my journal</button>
+  <button class="btn-secondary" id="again-btn" onclick="goTo('page-reflect')">Reflect again</button>
+</div>
+
+<script>
+const T = {
+  en: {
+    dir: 'ltr', htmlLang: 'en',
+    subtitle: 'Your spiritual mirror',
+    streakLabel: 'day streak',
+    themesLabel: 'Recurring themes this week',
+    tag1: 'Patience with others', tag2: 'Gratitude', tag3: 'Managing anger',
+    beginBtn: "Begin tonight's reflection",
+    backReflect: 'Back',
+    reflectLabel: "Tonight's reflection", reflectTitle: 'How was your day?',
+    reflectHint: 'Write freely — your thoughts, struggles, moments of gratitude, or anything that stayed with you. This is private and only for you.',
+    placeholder: "Today I felt... I struggled with... I'm grateful for... I regret...",
+    wordLabel: 'words', reflectBtn: 'Reflect with me', laterBtn: 'Maybe later',
+    errorMsg: 'Something went wrong. Please check your connection and try again.',
+    loadingMsgs: ["Reading your reflection\nwith care and attention…","Searching the tradition\nfor what speaks to you…","Finding the wisdom\nthat meets your heart…"],
+    backWisdom: 'Home', wisdomLabel: 'Your reflection, illuminated', wisdomTitle: 'What the tradition offers you',
+    noticedLabel: 'What I noticed', questionLabel: 'A question to sit with', intentionsLabel: 'Gentle intentions for tomorrow',
+    saveBtn: 'Save to my journal', againBtn: 'Reflect again',
+    days: ['S','M','T','W','T','F','S'],
+    greetings: [
+      { time: 'Late night', text: 'May your night be peaceful', sub: 'Even in quiet hours, muhasaba draws us closer to Allah.' },
+      { time: 'Morning reflection', text: 'Good morning', sub: 'Begin your day with a moment of intention and awareness.' },
+      { time: 'Afternoon check-in', text: 'Assalamu alaykum', sub: 'How is your day unfolding? What is weighing on your heart?' },
+      { time: 'Evening reflection', text: 'Assalamu alaykum', sub: 'Take a moment tonight to sit with yourself. What did today bring you?' },
+      { time: 'Night reflection', text: 'A blessed evening', sub: 'Before you sleep, look back on your day with honesty and mercy.' }
+    ],
+    buildPrompt: (r) => `You are Mirayah, a compassionate Islamic spiritual reflection companion. A Muslim has shared their daily reflection with you.
+
+Your task:
+1. Identify the key spiritual themes (patience, gratitude, anger, prayer, relationships, forgiveness, etc.)
+2. Choose ONE highly relevant Quran ayah that speaks directly to their situation. Output ONLY its surah and ayah numbers — do NOT write any Arabic text yourself.
+3. Write a brief, warm, non-preachy observation about what you noticed (2-3 sentences)
+4. Ask ONE deep, thoughtful question to help them reflect further
+5. Suggest 2 gentle, practical intentions for tomorrow
+
+All text fields must be in English. Respond ONLY in this exact JSON (no markdown, no backticks):
+{"source_type":"quran","surah":2,"ayah":286,"arabic":"the arabic text of the ayah","translation":"english translation of the ayah","observation":"warm observation in English","question":"one deep question in English","intentions":["intention 1","intention 2"]}
+
+User reflection: ${r}`
+  },
+
+  ar: {
+    dir: 'rtl', htmlLang: 'ar',
+    subtitle: 'مرايا — مرآتك الروحية الليلية',
+    streakLabel: 'يوم متواصل',
+    themesLabel: 'المواضيع المتكررة هذا الأسبوع',
+    tag1: 'الصبر مع الآخرين', tag2: 'الشكر', tag3: 'ضبط الغضب',
+    beginBtn: 'ابدأ مراجعتك الليلية',
+    backReflect: 'رجوع',
+    reflectLabel: 'مراجعة الليلة', reflectTitle: 'كيف كان يومك؟',
+    reflectHint: 'اكتب بحرية — أفكارك وصراعاتك ولحظات الشكر أو أي شيء بقي في ذهنك. هذا خاص بك وحدك.',
+    placeholder: 'شعرت اليوم بـ... وجدت صعوبة في... أنا ممتن لـ... أندم على...',
+    wordLabel: 'كلمات', reflectBtn: 'تأمّل معي', laterBtn: 'ربما لاحقاً',
+    errorMsg: 'حدث خطأ. يرجى التحقق من اتصالك والمحاولة مرة أخرى.',
+    loadingMsgs: ["نقرأ تأملك\nباهتمام وعناية…","نبحث في التراث\nعما يناسبك…","نجد الحكمة\nالتي تلامس قلبك…"],
+    backWisdom: 'الرئيسية', wisdomLabel: 'تأملك في ضوء الحكمة', wisdomTitle: 'ما يقدمه التراث لك',
+    noticedLabel: 'ما لاحظته', questionLabel: 'سؤال للتأمل', intentionsLabel: 'نيّات لطيفة لغد أفضل',
+    saveBtn: 'احفظ في مذكراتي', againBtn: 'تأمّل مجدداً',
+    days: ['أح','إث','ثل','أر','خم','جم','سب'],
+    greetings: [
+      { time: 'منتصف الليل', text: 'ليلة مباركة', sub: 'حتى في ساعات الهدوء، تقرّبنا المحاسبة من الله.' },
+      { time: 'مراجعة الصباح', text: 'صباح الخير', sub: 'ابدأ يومك بلحظة من النية والوعي.' },
+      { time: 'وقفة الظهيرة', text: 'السلام عليكم', sub: 'كيف يسير يومك؟ ما الذي يثقل قلبك؟' },
+      { time: 'مراجعة المساء', text: 'السلام عليكم', sub: 'خذ لحظة الليلة لتجلس مع نفسك. ماذا أحضر لك اليوم؟' },
+      { time: 'مراجعة الليل', text: 'مساء مبارك', sub: 'قبل أن تنام، انظر إلى يومك بصدق ورحمة.' }
+    ],
+    buildPrompt: (r) => `أنت تطبيق محاسبة، رفيق روحي إسلامي متعاطف. شارك معك مسلم تأمله اليومي.
+
+مهمتك:
+1. تحديد المواضيع الروحية الرئيسية (الصبر، الشكر، الغضب، الصلاة، العلاقات، المغفرة)
+2. اختر آية قرآنية واحدة تتحدث مباشرة عن حالتهم. أعطِ فقط رقم السورة ورقم الآية — لا تكتب النص العربي بنفسك أبداً.
+3. اكتب ملاحظة دافئة وغير وعظية (جملتان أو ثلاث)
+4. اطرح سؤالاً عميقاً واحداً لمزيد من التأمل
+5. اقترح نيتين لطيفتين وعمليتين للغد
+
+المستخدم قد يكتب بأي لهجة عربية (مصرية، خليجية، شامية، إلخ) — يجب أن تفهم لهجته وتردّ دائماً بالعربية الفصحى الكلاسيكية فقط، بغض النظر عن اللهجة المستخدمة. أجب فقط بهذا JSON (بدون markdown أو backticks):
+{"source_type":"quran","surah":2,"ayah":286,"arabic":"النص العربي للآية","translation":"معنى الآية بالعربية","observation":"ملاحظة دافئة","question":"سؤال عميق واحد","intentions":["نية 1","نية 2"]}
+
+تأمل المستخدم: ${r}`
+  },
+
+  it: {
+    dir: 'ltr', htmlLang: 'it',
+    subtitle: 'Il tuo specchio spirituale notturno',
+    streakLabel: 'giorni consecutivi',
+    themesLabel: 'Temi ricorrenti questa settimana',
+    tag1: 'Pazienza con gli altri', tag2: 'Gratitudine', tag3: 'Gestire la rabbia',
+    beginBtn: 'Inizia la riflessione di stasera',
+    backReflect: 'Indietro',
+    reflectLabel: 'Riflessione di stasera', reflectTitle: "Com'era la tua giornata?",
+    reflectHint: 'Scrivi liberamente — i tuoi pensieri, difficoltà, momenti di gratitudine o qualsiasi cosa ti sia rimasta. È privato e solo per te.',
+    placeholder: "Oggi mi sono sentito... Ho avuto difficoltà con... Sono grato per... Mi pento di...",
+    wordLabel: 'parole', reflectBtn: 'Rifletti con me', laterBtn: 'Forse più tardi',
+    errorMsg: 'Qualcosa è andato storto. Controlla la connessione e riprova.',
+    loadingMsgs: ["Leggendo la tua riflessione\ncon attenzione e cura…","Cercando nella tradizione\nciò che parla a te…","Trovando la saggezza\nche incontra il tuo cuore…"],
+    backWisdom: 'Home', wisdomLabel: 'La tua riflessione, illuminata', wisdomTitle: 'Ciò che la tradizione ti offre',
+    noticedLabel: 'Cosa ho notato', questionLabel: 'Una domanda su cui riflettere', intentionsLabel: 'Intenzioni gentili per domani',
+    saveBtn: 'Salva nel mio diario', againBtn: 'Rifletti ancora',
+    days: ['D','L','M','M','G','V','S'],
+    greetings: [
+      { time: 'Notte fonda', text: 'Che la tua notte sia serena', sub: 'Anche nelle ore silenziose, la muhasaba ci avvicina ad Allah.' },
+      { time: 'Riflessione mattutina', text: 'Buongiorno', sub: 'Inizia la tua giornata con un momento di intenzione e consapevolezza.' },
+      { time: 'Pausa pomeridiana', text: 'Assalamu alaykum', sub: 'Come sta andando la tua giornata? Cosa pesa sul tuo cuore?' },
+      { time: 'Riflessione serale', text: 'Assalamu alaykum', sub: 'Prenditi un momento stasera per stare con te stesso. Cosa ti ha portato oggi?' },
+      { time: 'Riflessione notturna', text: 'Una serata benedetta', sub: 'Prima di dormire, guarda indietro alla tua giornata con onestà e misericordia.' }
+    ],
+    buildPrompt: (r) => `Sei Mirayah, un compagno spirituale islamico compassionevole. Un musulmano ha condiviso la sua riflessione quotidiana con te.
+
+Il tuo compito:
+1. Identificare i temi spirituali principali (pazienza, gratitudine, rabbia, preghiera, relazioni, perdono, ecc.)
+2. Scegliere UN versetto del Corano che parli direttamente alla loro situazione. Restituisci SOLO il numero della sura e dell'ayah — non scrivere mai tu stesso il testo arabo.
+3. Scrivere una breve osservazione calda e non moralizzatrice (2-3 frasi)
+4. Fare UNA domanda profonda e riflessiva
+5. Suggerire 2 intenzioni gentili e pratiche per domani
+
+Tutti i campi di testo devono essere in italiano. Rispondi SOLO in questo JSON (senza markdown, senza backtick):
+{"source_type":"quran","surah":2,"ayah":286,"arabic":"il testo arabo dell'ayah","translation":"traduzione italiana dell'ayah","observation":"osservazione calda in italiano","question":"una domanda profonda in italiano","intentions":["intenzione 1","intenzione 2"]}
+
+Riflessione dell'utente: ${r}`
+  },
+
+  de: {
+    dir: 'ltr', htmlLang: 'de',
+    subtitle: 'Dein nächtlicher spiritueller Spiegel',
+    streakLabel: 'Tage in Folge',
+    themesLabel: 'Wiederkehrende Themen diese Woche',
+    tag1: 'Geduld mit anderen', tag2: 'Dankbarkeit', tag3: 'Umgang mit Ärger',
+    beginBtn: 'Heutige Abendreflexion beginnen',
+    backReflect: 'Zurück',
+    reflectLabel: 'Heutige Reflexion', reflectTitle: 'Wie war dein Tag?',
+    reflectHint: 'Schreib frei — deine Gedanken, Kämpfe, Momente der Dankbarkeit oder was auch immer dich beschäftigt. Dies ist privat und nur für dich.',
+    placeholder: "Heute fühlte ich mich... Ich kämpfte mit... Ich bin dankbar für... Ich bereue...",
+    wordLabel: 'Wörter', reflectBtn: 'Reflektiere mit mir', laterBtn: 'Vielleicht später',
+    errorMsg: 'Etwas ist schiefgelaufen. Bitte überprüfe deine Verbindung und versuche es erneut.',
+    loadingMsgs: ["Deine Reflexion wird\nsorgfältig gelesen…","Die Tradition wird durchsucht\nnach dem, was zu dir spricht…","Die Weisheit wird gefunden\ndie dein Herz berührt…"],
+    backWisdom: 'Startseite', wisdomLabel: 'Deine Reflexion, erleuchtet', wisdomTitle: 'Was die Tradition dir anbietet',
+    noticedLabel: 'Was ich bemerkt habe', questionLabel: 'Eine Frage zum Nachdenken', intentionsLabel: 'Sanfte Absichten für morgen',
+    saveBtn: 'Im Tagebuch speichern', againBtn: 'Erneut reflektieren',
+    days: ['So','Mo','Di','Mi','Do','Fr','Sa'],
+    greetings: [
+      { time: 'Späte Nacht', text: 'Möge deine Nacht friedlich sein', sub: 'Auch in stillen Stunden bringt uns diese Praxis Allah näher.' },
+      { time: 'Morgenreflexion', text: 'Guten Morgen', sub: 'Beginne deinen Tag mit einem Moment der Absicht und des Bewusstseins.' },
+      { time: 'Nachmittagspause', text: 'Assalamu alaykum', sub: 'Wie entwickelt sich dein Tag? Was liegt auf deinem Herzen?' },
+      { time: 'Abendreflexion', text: 'Assalamu alaykum', sub: 'Nimm dir heute Abend einen Moment, um bei dir selbst zu sitzen.' },
+      { time: 'Nachtreflexion', text: 'Ein gesegneter Abend', sub: 'Bevor du schläfst, schau mit Ehrlichkeit und Barmherzigkeit auf deinen Tag zurück.' }
+    ],
+    buildPrompt: (r) => `Du bist Mirayah, ein mitfühlender islamischer spiritueller Reflexionsbegleiter. Ein Muslim hat dir seine tägliche Reflexion mitgeteilt.
+
+Deine Aufgabe:
+1. Die wichtigsten spirituellen Themen identifizieren (Geduld, Dankbarkeit, Ärger, Gebet, Beziehungen, Vergebung usw.)
+2. EINEN hochrelevanten Koranvers wählen, der direkt zu ihrer Situation spricht. Gib NUR die Surah- und Ayah-Nummer zurück — schreibe niemals selbst arabischen Text.
+3. Eine kurze, warme, nicht moralisierende Beobachtung schreiben (2-3 Sätze)
+4. EINE tiefe, nachdenkliche Frage stellen
+5. 2 sanfte, praktische Absichten für morgen vorschlagen
+
+Alle Textfelder müssen auf Deutsch sein. Antworte NUR in diesem JSON (kein Markdown, keine Backticks):
+{"source_type":"quran","surah":2,"ayah":286,"arabic":"der arabische Text des Ayah","translation":"deutsche Übersetzung des Ayah","observation":"warme Beobachtung auf Deutsch","question":"eine tiefe Frage auf Deutsch","intentions":["Absicht 1","Absicht 2"]}
+
+Reflexion des Nutzers: ${r}`
+  }
+};
+
+let currentLang = 'en';
+
+function setLang(lang, btn) {
+  currentLang = lang;
+  const t = T[lang];
+
+  document.documentElement.setAttribute('dir', t.dir);
+  document.documentElement.setAttribute('lang', t.htmlLang);
+
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('home-subtitle').textContent = t.subtitle;
+  document.getElementById('streak-label').textContent = t.streakLabel;
+  document.getElementById('themes-label').textContent = t.themesLabel;
+  document.getElementById('tag1').textContent = t.tag1;
+  document.getElementById('tag2').textContent = t.tag2;
+  document.getElementById('tag3').textContent = t.tag3;
+  document.getElementById('begin-btn').textContent = t.beginBtn;
+  document.getElementById('back-label-reflect').textContent = t.backReflect;
+  document.getElementById('reflect-label').textContent = t.reflectLabel;
+  document.getElementById('reflect-title').textContent = t.reflectTitle;
+  document.getElementById('reflect-hint').textContent = t.reflectHint;
+  document.getElementById('reflection-input').placeholder = t.placeholder;
+  document.getElementById('word-label').textContent = t.wordLabel;
+  document.getElementById('reflect-btn').textContent = t.reflectBtn;
+  document.getElementById('later-btn').textContent = t.laterBtn;
+  document.getElementById('error-block').textContent = t.errorMsg;
+  document.getElementById('back-label-wisdom').textContent = t.backWisdom;
+  document.getElementById('wisdom-label').textContent = t.wisdomLabel;
+  document.getElementById('wisdom-title').textContent = t.wisdomTitle;
+  document.getElementById('save-btn').textContent = t.saveBtn;
+  document.getElementById('again-btn').textContent = t.againBtn;
+  document.getElementById('loading-text').innerHTML = t.loadingMsgs[0].replace('\n','<br>');
+
+  applyGreeting();
+  renderStreakDays();
+  applyGreeting();
+  renderStreakDays();
+
+  // Voice: update hint and reset recognition for new language
+  updateVoiceHint();
+  if (recognition) { try { recognition.stop(); } catch(_){} recognition = null; isRecording = false; }
+}
+
+function applyGreeting() {
+  const t = T[currentLang];
+  const h = new Date().getHours();
+  let idx = h < 5 ? 0 : h < 12 ? 1 : h < 17 ? 2 : h < 21 ? 3 : 4;
+  const g = t.greetings[idx];
+  document.getElementById('greeting-time').textContent = g.time;
+  document.getElementById('greeting-text').textContent = g.text;
+  document.getElementById('greeting-sub').textContent = g.sub;
+}
+
+function renderStreakDays() {
+  const t = T[currentLang];
+  const today = new Date().getDay();
+  const el = document.getElementById('streak-days');
+  el.innerHTML = '';
+  t.days.forEach((d, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'day-dot ' + (i === today ? 'today' : i < today ? 'done' : 'empty');
+    dot.textContent = d;
+    el.appendChild(dot);
+  });
+}
+
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  target.classList.add('active');
+  target.style.animation = 'none';
+  requestAnimationFrame(() => { target.style.animation = ''; });
+  window.scrollTo(0, 0);
+}
+
+function updateCount() {
+  const text = document.getElementById('reflection-input').value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  document.getElementById('char-count').textContent = words;
+  document.getElementById('reflect-btn').disabled = words < 5;
+}
+
+// Language code → Al-Quran Cloud edition for translation
+const QURAN_EDITIONS = {
+  en: 'en.sahih',
+  ar: 'ar.muyassar',
+  it: 'it.piccardo',
+  de: 'de.bubenheim'
+};
+
+// Surah names for reference display
+const SURAH_NAMES = {
+  1:'Al-Fatihah',2:'Al-Baqarah',3:'Al-Imran',4:'An-Nisa',5:'Al-Maidah',
+  6:'Al-Anam',7:'Al-Araf',8:'Al-Anfal',9:'At-Tawbah',10:'Yunus',
+  11:'Hud',12:'Yusuf',13:'Ar-Rad',14:'Ibrahim',15:'Al-Hijr',
+  16:'An-Nahl',17:'Al-Isra',18:'Al-Kahf',19:'Maryam',20:'Ta-Ha',
+  21:'Al-Anbiya',22:'Al-Hajj',23:'Al-Muminun',24:'An-Nur',25:'Al-Furqan',
+  26:'Ash-Shuara',27:'An-Naml',28:'Al-Qasas',29:'Al-Ankabut',30:'Ar-Rum',
+  31:'Luqman',32:'As-Sajdah',33:'Al-Ahzab',34:'Saba',35:'Fatir',
+  36:'Ya-Sin',37:'As-Saffat',38:'Sad',39:'Az-Zumar',40:'Ghafir',
+  41:'Fussilat',42:'Ash-Shura',43:'Az-Zukhruf',44:'Ad-Dukhan',45:'Al-Jathiyah',
+  46:'Al-Ahqaf',47:'Muhammad',48:'Al-Fath',49:'Al-Hujurat',50:'Qaf',
+  51:'Adh-Dhariyat',52:'At-Tur',53:'An-Najm',54:'Al-Qamar',55:'Ar-Rahman',
+  56:'Al-Waqiah',57:'Al-Hadid',58:'Al-Mujadila',59:'Al-Hashr',60:'Al-Mumtahanah',
+  61:'As-Saf',62:'Al-Jumuah',63:'Al-Munafiqun',64:'At-Taghabun',65:'At-Talaq',
+  66:'At-Tahrim',67:'Al-Mulk',68:'Al-Qalam',69:'Al-Haqqah',70:'Al-Maarij',
+  71:'Nuh',72:'Al-Jinn',73:'Al-Muzzammil',74:'Al-Muddaththir',75:'Al-Qiyamah',
+  76:'Al-Insan',77:'Al-Mursalat',78:'An-Naba',79:'An-Naziat',80:'Abasa',
+  81:'At-Takwir',82:'Al-Infitar',83:'Al-Mutaffifin',84:'Al-Inshiqaq',85:'Al-Buruj',
+  86:'At-Tariq',87:'Al-Ala',88:'Al-Ghashiyah',89:'Al-Fajr',90:'Al-Balad',
+  91:'Ash-Shams',92:'Al-Layl',93:'Ad-Duha',94:'Ash-Sharh',95:'At-Tin',
+  96:'Al-Alaq',97:'Al-Qadr',98:'Al-Bayyinah',99:'Az-Zalzalah',100:'Al-Adiyat',
+  101:'Al-Qariah',102:'At-Takathur',103:'Al-Asr',104:'Al-Humazah',105:'Al-Fil',
+  106:'Quraysh',107:'Al-Maun',108:'Al-Kawthar',109:'Al-Kafirun',110:'An-Nasr',
+  111:'Al-Masad',112:'Al-Ikhlas',113:'Al-Falaq',114:'An-Nas'
+};
+
+async function fetchVerifiedAyah(surah, ayah, lang) {
+  const edition = QURAN_EDITIONS[lang] || 'en.sahih';
+  const url = `https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${edition}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Quran API error');
+  const json = await res.json();
+  if (json.code !== 200) throw new Error('Quran API bad response');
+  const uthmani = json.data.find(d => d.edition.identifier === 'quran-uthmani');
+  const trans   = json.data.find(d => d.edition.identifier === edition);
+  return {
+    arabic: uthmani ? uthmani.text : '',
+    translation: trans ? trans.text : '',
+    surahName: SURAH_NAMES[surah] || `Surah ${surah}`,
+    surahNum: surah,
+    ayahNum: ayah
+  };
+}
+
+
+async function submitReflection() {
+  const reflection = document.getElementById('reflection-input').value.trim();
+  if (!reflection || reflection.split(/\s+/).length < 5) return;
+
+  const t = T[currentLang];
+  document.getElementById('error-block').style.display = 'none';
+  goTo('page-loading');
+
+  let msgIdx = 0;
+  const loadingTextEl = document.getElementById('loading-text');
+  const interval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % t.loadingMsgs.length;
+    loadingTextEl.innerHTML = t.loadingMsgs[msgIdx].replace('\n','<br>');
+  }, 2500);
+
+  try {
+    // Call our Vercel backend — Gemini key is hidden server-side
+    const res = await fetch('/api/reflect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: t.buildPrompt(reflection) })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => String(res.status));
+      throw new Error('API error ' + res.status + ': ' + errText.slice(0, 300));
+    }
+
+    const data = await res.json();
+    const raw = data.text || '';
+    if (!raw) throw new Error('Empty response from server');
+
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in response: ' + raw.slice(0, 200));
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Try live Quran API
+    let arabic = parsed.arabic || '';
+    let translation = parsed.translation || '';
+    let apiVerified = false;
+
+    try {
+      const ayahData = await fetchVerifiedAyah(parsed.surah, parsed.ayah, currentLang);
+      arabic = ayahData.arabic;
+      translation = ayahData.translation;
+      apiVerified = true;
+    } catch (_) {
+      apiVerified = false;
+    }
+
+    clearInterval(interval);
+
+    renderWisdom({
+      arabic,
+      translation,
+      surahName: SURAH_NAMES[parsed.surah] || ('Surah ' + parsed.surah),
+      surahNum: parsed.surah,
+      ayahNum: parsed.ayah,
+      observation: parsed.observation,
+      question: parsed.question,
+      intentions: parsed.intentions,
+      apiVerified
+    }, reflection);
+
+    goTo('page-wisdom');
+
+  } catch (e) {
+    clearInterval(interval);
+    console.error('Mirayah error:', e);
+    goTo('page-reflect');
+    document.getElementById('error-block').textContent = T[currentLang].errorMsg + ' (' + e.message + ')';
+    document.getElementById('error-block').style.display = 'block';
+  }
+}
+
+function renderWisdom(data, originalReflection) {
+  const t = T[currentLang];
+  const isRtl = t.dir === 'rtl';
+  const container = document.getElementById('wisdom-content');
+  const preview = originalReflection.length > 120 ? originalReflection.slice(0, 120) + '…' : originalReflection;
+  const rtlStyle = isRtl ? 'direction:rtl;text-align:right;' : '';
+  const translationBorder = isRtl
+    ? 'border-left:none;border-right:2px solid var(--teal-mid);padding-left:0;padding-right:14px;'
+    : '';
+
+  const refLabel = 'Surah ' + data.surahName + ' ' + data.surahNum + ':' + data.ayahNum;
+
+  const sourceBadge = data.apiVerified
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#E1F5EE;color:#085041;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:8px;">verified</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:4px;background:#FAEEDA;color:#633806;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:8px;">verify with scholar</span>';
+
+  container.innerHTML =
+    '<div class="reflection-echo" style="' + rtlStyle + '">"' + preview + '"</div>' +
+    '<div class="ayah-card">' +
+      '<div class="ayah-arabic">' + (data.arabic || '') + '</div>' +
+      '<div class="ayah-translation" style="' + translationBorder + rtlStyle + '">' + (data.translation || '') + '</div>' +
+      '<div class="ayah-source" style="' + (isRtl ? 'text-align:right;display:flex;flex-direction:row-reverse;align-items:center;gap:4px;' : 'display:flex;align-items:center;gap:4px;') + '">' +
+        '<span>📖 ' + refLabel + '</span>' + sourceBadge +
+      '</div>' +
+    '</div>' +
+    '<div class="ai-response-block">' +
+      '<div class="response-label">' + t.noticedLabel + '</div>' +
+      '<div class="response-text" style="' + rtlStyle + '">' + data.observation + '</div>' +
+    '</div>' +
+    '<div class="question-block">' +
+      '<div class="question-label">' + t.questionLabel + '</div>' +
+      '<div class="question-text" style="' + rtlStyle + '">' + data.question + '</div>' +
+    '</div>' +
+    '<div class="intentions-block">' +
+      '<div class="response-label" style="margin-bottom:12px;">' + t.intentionsLabel + '</div>' +
+      data.intentions.map(function(i) {
+        return '<div class="intention-item" style="' + (isRtl ? 'flex-direction:row-reverse;' : '') + '">' +
+          '<div class="intention-dot"></div>' +
+          '<span style="' + rtlStyle + '">' + i + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+}
+
+
+// ── VOICE RECORDING (Web Speech API — free, no backend) ──────
+let recognition = null;
+let isRecording = false;
+
+const VOICE_LANGS = { en: 'en-US', ar: 'ar-SA', it: 'it-IT', de: 'de-DE' };
+
+const VOICE_HINTS = {
+  en: { idle: 'Tap to speak your reflection', recording: 'Listening… tap again to stop', noSupport: 'Voice not supported in this browser' },
+  ar: { idle: 'اضغط للتحدث', recording: 'جارٍ الاستماع… اضغط مرة أخرى للإيقاف', noSupport: 'المتصفح لا يدعم التسجيل الصوتي' },
+  it: { idle: 'Tocca per parlare', recording: 'In ascolto… tocca di nuovo per fermare', noSupport: 'Voce non supportata in questo browser' },
+  de: { idle: 'Tippen zum Sprechen', recording: 'Hört zu… erneut tippen zum Stoppen', noSupport: 'Sprache in diesem Browser nicht unterstützt' }
+};
+
+function initVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('voice-hint').textContent = VOICE_HINTS[currentLang]?.noSupport || 'Voice not supported';
+    document.getElementById('mic-btn').style.opacity = '0.4';
+    document.getElementById('mic-btn').style.cursor = 'not-allowed';
+    return false;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  let finalTranscript = '';
+  let existingText = '';
+
+  recognition.onstart = () => {
+    isRecording = true;
+    existingText = document.getElementById('reflection-input').value;
+    finalTranscript = '';
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('voice-hint').style.display = 'none';
+    document.getElementById('waveform').style.display = 'flex';
+    document.getElementById('voice-status').classList.add('recording');
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    finalTranscript = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    const combined = (existingText ? existingText.trim() + ' ' : '') + finalTranscript + interim;
+    document.getElementById('reflection-input').value = combined;
+    updateCount();
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('waveform').style.display = 'none';
+    document.getElementById('voice-hint').style.display = 'inline';
+    document.getElementById('voice-status').classList.remove('recording');
+    updateVoiceHint();
+    // Commit final text cleanly
+    const textarea = document.getElementById('reflection-input');
+    const base = existingText ? existingText.trim() + ' ' : '';
+    textarea.value = (base + finalTranscript).trim();
+    updateCount();
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('waveform').style.display = 'none';
+    document.getElementById('voice-hint').style.display = 'inline';
+    document.getElementById('voice-status').classList.remove('recording');
+    if (e.error !== 'aborted') updateVoiceHint();
+  };
+
+  return true;
+}
+
+function toggleVoice() {
+  if (!recognition) {
+    if (!initVoice()) return;
+  }
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    recognition.lang = VOICE_LANGS[currentLang] || 'en-US';
+    recognition.start();
+  }
+}
+
+function updateVoiceHint() {
+  const hints = VOICE_HINTS[currentLang] || VOICE_HINTS.en;
+  document.getElementById('voice-hint').textContent = isRecording ? hints.recording : hints.idle;
+}
+
+// Init
+applyGreeting();
+renderStreakDays();
+</script>
+<div class="dev-footer">
+  <div class="dev-footer-line"></div>
+  <div class="dev-footer-badge">Under Development</div>
+  <div class="dev-footer-text">
+    Crafted with intention by <span>Mahmoud Ismail</span><br>
+    v0.1.0-alpha &nbsp;·&nbsp; May 2026
+  </div>
+</div>
+</body>
+</html>
