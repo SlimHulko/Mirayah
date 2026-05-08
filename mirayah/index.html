@@ -887,16 +887,17 @@ function initVoice() {
     return false;
   }
 
-  // Use non-continuous mode — fires once, returns clean final result, no duplication
   recognition = new SpeechRecognition();
   recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.interimResults = true; // show words live as spoken
 
   let existingText = '';
+  let finalBuffer = ''; // accumulates confirmed words across chunks
 
   recognition.onstart = () => {
     isRecording = true;
     existingText = document.getElementById('reflection-input').value.trim();
+    finalBuffer = '';
     document.getElementById('mic-btn').classList.add('recording');
     document.getElementById('voice-hint').style.display = 'none';
     document.getElementById('waveform').style.display = 'flex';
@@ -904,22 +905,28 @@ function initVoice() {
   };
 
   recognition.onresult = (e) => {
-    // Non-continuous mode: one clean final result per chunk
-    const transcript = e.results[0][0].transcript.trim();
+    let interim = '';
+    let justFinalized = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) justFinalized += e.results[i][0].transcript;
+      else interim = e.results[i][0].transcript;
+    }
+    if (justFinalized) finalBuffer += justFinalized + ' ';
     const base = existingText ? existingText + ' ' : '';
-    document.getElementById('reflection-input').value = (base + transcript).trim();
-    existingText = document.getElementById('reflection-input').value.trim();
+    // Show: existing + confirmed chunks + current interim live
+    document.getElementById('reflection-input').value = (base + finalBuffer + interim).trim();
     updateCount();
   };
 
   recognition.onend = () => {
+    // Sync existingText with whatever is now in the box
+    existingText = document.getElementById('reflection-input').value.trim();
+    finalBuffer = '';
     if (isRecording) {
-      // Still recording — restart after brief delay to let browser reset
       setTimeout(() => {
         try { recognition.start(); } catch(_) {}
       }, 150);
     } else {
-      // User tapped stop — clean up UI
       document.getElementById('mic-btn').classList.remove('recording');
       document.getElementById('waveform').style.display = 'none';
       document.getElementById('voice-hint').style.display = 'inline';
