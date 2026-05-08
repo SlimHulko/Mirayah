@@ -326,10 +326,25 @@
 
   body.night { background:#0d1117; color:#e8dcc8; }
   body.night .themes-card, body.night .ai-response-block,
-  body.night .intentions-block, body.night .question-block,
-  body.night .reflection-area { background:#111827; border-color:#1c2333; color:#e8dcc8; }
-  body.night .reflection-echo { background:#1a1400; }
-  body.night .btn-secondary { border-color:#1c2333; color:#7a6a58; }
+  body.night .intentions-block { background:#161d2e; border-color:#2a3347; color:#e8dcc8; }
+  body.night .question-block { background:#1a1600; border-color:#3d3000; }
+  body.night .question-text { color:#f0dfa0; }
+  body.night .reflection-area { background:#161d2e; border-color:#2a3347; border-bottom-color:#c8922a; color:#e8dcc8; }
+  body.night .reflection-area::placeholder { color:#5a6070; }
+  body.night .reflection-echo { background:#1a1400; border-left-color:#c8922a; color:#d4c4a0; }
+  body.night .response-text { color:#c8b89a; }
+  body.night .intention-item { color:#c8b89a; border-bottom-color:#2a3347; }
+  body.night .themes-label { color:#7a8090; }
+  body.night .tag-purple { background:#1e1840; color:#b0a0e0; border-color:#3d3070; }
+  body.night .tag-teal { background:#0a2018; color:#50b090; border-color:#1a4030; }
+  body.night .tag-amber { background:#1e1500; color:#e0a040; border-color:#3d2a00; }
+  body.night .section-title { color:#f0e8d8; }
+  body.night .section-hint { color:#8a9090; }
+  body.night .char-count { color:#5a6070; }
+  body.night .btn-secondary { border-color:#2a3347; color:#8a9090; }
+  body.night .btn-secondary:hover { background:#161d2e; color:#e8dcc8; }
+  body.night .back-btn { color:#8a9090; }
+  body.night .error-block { background:#200a0a; border-color:#5a1a1a; color:#e08080; }
   body, body.night { transition: background 0.3s, color 0.3s; }
  
 </style>
@@ -979,10 +994,17 @@ function updateVoiceHint() {
 
 function getHijriDate() {
   try {
-    const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+    const now = new Date();
+    const hijriAr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
       day:'numeric', month:'long', year:'numeric'
-    }).format(new Date());
-    document.getElementById('hijri-date').textContent = hijri;
+    }).format(now);
+    const hijriEn = new Intl.DateTimeFormat('en-u-ca-islamic', {
+      day:'numeric', month:'long', year:'numeric'
+    }).format(now);
+    const el = document.getElementById('hijri-date');
+    el.innerHTML = '<span style="direction:rtl;">' + hijriAr + '</span>' +
+                   ' <span style="opacity:0.4;">·</span> ' +
+                   '<span style="font-family:DM Sans,sans-serif;font-size:11px;">' + hijriEn + '</span>';
   } catch(e) {}
 }
 
