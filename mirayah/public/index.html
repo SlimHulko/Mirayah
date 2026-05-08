@@ -760,7 +760,7 @@ async function submitReflection() {
   }, 2500);
 
   try {
-    // Call our Vercel backend — Gemini key is hidden server-side
+    // Call Vercel backend — Gemini key is hidden server-side, users need nothing
     const res = await fetch('/api/reflect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -780,7 +780,8 @@ async function submitReflection() {
     if (!jsonMatch) throw new Error('No JSON in response: ' + raw.slice(0, 200));
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // Try live Quran API
+
+    // Try live Quran API (works in native apps & production servers)
     let arabic = parsed.arabic || '';
     let translation = parsed.translation || '';
     let apiVerified = false;
@@ -791,6 +792,7 @@ async function submitReflection() {
       translation = ayahData.translation;
       apiVerified = true;
     } catch (_) {
+      // Sandbox blocks external APIs — use Claude's text as prototype fallback
       apiVerified = false;
     }
 
@@ -814,7 +816,6 @@ async function submitReflection() {
     clearInterval(interval);
     console.error('Mirayah error:', e);
     goTo('page-reflect');
-    document.getElementById('error-block').textContent = T[currentLang].errorMsg + ' (' + e.message + ')';
     document.getElementById('error-block').style.display = 'block';
   }
 }
@@ -890,13 +891,13 @@ function initVoice() {
   recognition.continuous = true;
   recognition.interimResults = true;
 
-  let finalTranscript = '';
-  let existingText = '';
+  let committedText = ''; // only finalized words
+  let existingText = '';  // text already in box before recording
 
   recognition.onstart = () => {
     isRecording = true;
-    existingText = document.getElementById('reflection-input').value;
-    finalTranscript = '';
+    existingText = document.getElementById('reflection-input').value.trim();
+    committedText = '';
     document.getElementById('mic-btn').classList.add('recording');
     document.getElementById('voice-hint').style.display = 'none';
     document.getElementById('waveform').style.display = 'flex';
@@ -904,14 +905,14 @@ function initVoice() {
   };
 
   recognition.onresult = (e) => {
-    let interim = '';
-    finalTranscript = '';
-    for (let i = 0; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
-      else interim += e.results[i][0].transcript;
+    // e.resultIndex tells us where NEW results start — prevents duplication
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) committedText += e.results[i][0].transcript + ' ';
     }
-    const combined = (existingText ? existingText.trim() + ' ' : '') + finalTranscript + interim;
-    document.getElementById('reflection-input').value = combined;
+    const lastResult = e.results[e.results.length - 1];
+    const interim = lastResult.isFinal ? '' : lastResult[0].transcript;
+    const base = existingText ? existingText + ' ' : '';
+    document.getElementById('reflection-input').value = (base + committedText + interim).trim();
     updateCount();
   };
 
@@ -922,10 +923,8 @@ function initVoice() {
     document.getElementById('voice-hint').style.display = 'inline';
     document.getElementById('voice-status').classList.remove('recording');
     updateVoiceHint();
-    // Commit final text cleanly
-    const textarea = document.getElementById('reflection-input');
-    const base = existingText ? existingText.trim() + ' ' : '';
-    textarea.value = (base + finalTranscript).trim();
+    const base = existingText ? existingText + ' ' : '';
+    document.getElementById('reflection-input').value = (base + committedText).trim();
     updateCount();
   };
 
