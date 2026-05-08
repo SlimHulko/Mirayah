@@ -887,17 +887,16 @@ function initVoice() {
     return false;
   }
 
+  // Use non-continuous mode — fires once, returns clean final result, no duplication
   recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.interimResults = false;
 
-  let committedText = ''; // only finalized words
-  let existingText = '';  // text already in box before recording
+  let existingText = '';
 
   recognition.onstart = () => {
     isRecording = true;
     existingText = document.getElementById('reflection-input').value.trim();
-    committedText = '';
     document.getElementById('mic-btn').classList.add('recording');
     document.getElementById('voice-hint').style.display = 'none';
     document.getElementById('waveform').style.display = 'flex';
@@ -905,27 +904,27 @@ function initVoice() {
   };
 
   recognition.onresult = (e) => {
-    // e.resultIndex tells us where NEW results start — prevents duplication
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) committedText += e.results[i][0].transcript + ' ';
-    }
-    const lastResult = e.results[e.results.length - 1];
-    const interim = lastResult.isFinal ? '' : lastResult[0].transcript;
+    // Non-continuous mode: always one clean final result
+    const transcript = e.results[0][0].transcript.trim();
     const base = existingText ? existingText + ' ' : '';
-    document.getElementById('reflection-input').value = (base + committedText + interim).trim();
+    document.getElementById('reflection-input').value = (base + transcript).trim();
+    existingText = document.getElementById('reflection-input').value.trim();
     updateCount();
+    // Auto-restart to keep listening
+    if (isRecording) {
+      try { recognition.start(); } catch(_) {}
+    }
   };
 
   recognition.onend = () => {
-    isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('waveform').style.display = 'none';
-    document.getElementById('voice-hint').style.display = 'inline';
-    document.getElementById('voice-status').classList.remove('recording');
-    updateVoiceHint();
-    const base = existingText ? existingText + ' ' : '';
-    document.getElementById('reflection-input').value = (base + committedText).trim();
-    updateCount();
+    if (!isRecording) {
+      // User stopped — clean up UI
+      document.getElementById('mic-btn').classList.remove('recording');
+      document.getElementById('waveform').style.display = 'none';
+      document.getElementById('voice-hint').style.display = 'inline';
+      document.getElementById('voice-status').classList.remove('recording');
+      updateVoiceHint();
+    }
   };
 
   recognition.onerror = (e) => {
