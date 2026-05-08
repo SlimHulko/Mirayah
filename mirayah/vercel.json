@@ -1,6 +1,6 @@
 {
-  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/reflect", "destination": "/api/reflect.js" }
   ]
 }
+
