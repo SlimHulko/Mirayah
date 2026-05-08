@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/api/reflect", "destination": "/api/reflect.js" }
+  "routes": [
+    { "src": "/api/reflect", "dest": "/api/reflect.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-
